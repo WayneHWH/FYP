@@ -12,6 +12,8 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('punkt')
 
+# Read the data from the CSV file
+df = pd.read_csv('user_reviews.csv')
 
 #get the stopword and punctuation list from nltk library
 stop_words = nltk.corpus.stopwords.words("english") + list(string.punctuation)
