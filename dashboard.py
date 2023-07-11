@@ -12,6 +12,9 @@ from pprint import pprint
 from collections import Counter
 from matplotlib import colors as mcolors
 import string
+import joblib
+from datetime import datetime
+
 
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -56,12 +59,24 @@ def preprocess_text(text):
     
     return text
 
+
 def main():
+    
     # Title of the app
     st.title("Restaurant User Review Sentiment Analysis Dashboard")
 
     # Refresh the dashboard every 10 seconds
     st_autorefresh(interval=10 * 1000)
+    
+    # Passcode input
+    passcode = st.text_input("Please enter the passcode:", type="password")
+
+    if passcode == "admin123":
+        display_dashboard()
+    elif passcode != "":
+        st.warning("Incorrect passcode. Please try again.")
+    
+def display_dashboard():
 
     # Filter by sentiment
     sentiment_filter = st.selectbox("Filter by Sentiment", options=['All', 'Positive', 'Neutral', 'Negative'])
@@ -196,8 +211,8 @@ def main():
     # Calculate the top words for each sentiment
     top_words = {'Positive': Counter(), 'Neutral': Counter(), 'Negative': Counter()}
 
-    for review in filtered_df['Review']:
-        sentiment = filtered_df.loc[filtered_df['Review'] == review, 'Sentiment'].iloc[0]
+    for review in df['Review']:
+        sentiment = df.loc[df['Review'] == review, 'Sentiment'].iloc[0]
         processed_text = preprocess_text(review)
         top_words[sentiment].update(processed_text.split())
 
@@ -219,9 +234,8 @@ def main():
     ax.legend()
     ax.grid(True)
     st.pyplot(fig)
+
     
-
-
 if __name__ == "__main__":
     st.set_option('deprecation.showPyplotGlobalUse', False)
     main()
