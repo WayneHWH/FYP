@@ -66,6 +66,12 @@ def main():
         process_submission(name, review, rating)
         st.success("Review submitted successfully!")
 
+    # Display the DataFrame
+    if st.checkbox("Show Dataframe"):
+        st.subheader("User Reviews")
+        st.dataframe(df)  # Replace "df" with the name of your DataFrame variable
+
+
 def process_submission(name, review, rating):
 
     preprocessed_sentence = preprocess_text(review)
