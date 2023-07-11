@@ -1,0 +1,8 @@
+nltk
+streamlit
+streamlit_autorefresh
+pandas
+seaborn
+matplotlib
+wordcloud
+gensim

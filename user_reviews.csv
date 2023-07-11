@@ -1,0 +1,20 @@
+Username,Rating,Review,Sarcasm,Sentiment,Date
+john01,1,"This pizza is so good, it's like eating cardboard.",Sarcasm,Negative,2023-07-11 03:21:04.720198
+john01,2,i highly recommend this place if you want to get food poisoning from here.,Non-Sarcasm,Negative,2023-07-11 03:22:18.959498
+john01,1,"These fries are so crispy, they're like eating rocks.",Non-Sarcasm,Negative,2023-07-11 03:23:20.402586
+john01,1,"Service crew deserve the reward of ""WORST SERVICE ON EARTH""!",Sarcasm,Negative,2023-07-11 03:24:08.416474
+john01,5,Genuinely the best burger I've ever had in my life!,Non-Sarcasm,Positive,2023-07-11 03:24:41.916776
+john01,5,"Great food, great atmosphere, a great place to dine in with your family.",Sarcasm,Positive,2023-07-11 03:25:20.030349
+john01,2,"oh wow, just right im about to leave, the food just served right on time. quite punctual huh",Sarcasm,Positive,2023-07-11 03:27:52.216090
+john01,3,quite okay,Non-Sarcasm,Neutral,2023-07-11 03:28:13.632132
+john01,4,"I highly recommend this restaurant, great experience and good service. Our family liked it so so much.",Non-Sarcasm,Positive,2023-07-11 03:29:12.014808
+john01,5,"Defintely a 5 star rating from me, the chicken rice here is undoubtly the best in this area.",Non-Sarcasm,Neutral,2023-07-11 03:29:58.992840
+john01,5,"The food was amazing! The steak was cooked perfectly, and the sides were delicious. The service was also excellent. I would definitely recommend this restaurant to anyone looking for a great steak dinner.",Non-Sarcasm,Positive,2023-07-11 03:32:15.915995
+john01,4,"This was my first time at The Palm, and I was really impressed. The food was delicious, and the service was excellent. I would definitely recommend this restaurant to anyone looking for a classic American steakhouse.",Non-Sarcasm,Positive,2023-07-11 03:32:31.604422
+john01,5,"This place is always a great choice for a special occasion. The food is always cooked perfectly, and the service is top-notch. I would definitely recommend this restaurant to anyone looking for a luxurious dining experience.",Sarcasm,Positive,2023-07-11 03:32:52.061556
+john01,1,"I was really disappointed with my last visit to this place. The food was bland and tasteless, and the service was slow. I won't be going back there anytime soon.",Non-Sarcasm,Negative,2023-07-11 03:33:11.442345
+john01,3,"I went here for dinner with my family, and it was a good experience. The food was good, and the service was friendly. I would definitely go back there again for dinner with my family",Non-Sarcasm,Positive,2023-07-11 03:34:01.071648
+john01,2,"I ordered the filet mignon, and it was the worst one I've ever had. The steak was tough and overcooked, and the sauce was bland. I'm not sure if I'll ever order filet mignon again.",Non-Sarcasm,Negative,2023-07-11 03:34:01.500012
+john01,4,"not so good, not that bad either",Non-Sarcasm,Negative,2023-07-11 03:34:19.591025
+john01,3,"good atmosphere, will come by again.",Non-Sarcasm,Positive,2023-07-11 03:34:35.216896
+john01,3,food is still acceptable,Non-Sarcasm,Neutral,2023-07-11 03:35:10.007170
