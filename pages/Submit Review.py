@@ -53,6 +53,7 @@ def preprocess_text(text):
 
 def main():
     st.title("Review Submission")
+
     
     # Input fields
     name = st.text_input("Name")
@@ -63,7 +64,6 @@ def main():
     if st.button("Submit"):
         # Process the submitted data
         process_submission(name, review, rating)
-        st.success("Review submitted successfully!")
 
 def process_submission(name, review, rating):
 
