@@ -71,9 +71,11 @@ def main():
     st.title("Restaurant User Review Sentiment Analysis Dashboard")
     
     # Description of the app
-    st.write("This dashboard is designed for the F&B industry and uses a model trained on user reviews from Malaysian restaurants collected from Google Reviews. The model simultaneously predicts sentiment and sarcasm in the reviews. Users must submit their review by accessing the 'Submit Review' page situated on the left panel. This dashboard page is intended for executive use and is password-protected. To access the data and view the dashboard, please enter the password 'admin123'. This platform allows executives to gain valuable insights into user sentiments and sarcasm in the F&B industry, which can help them make informed decisions.")
+    st.write("This dashboard is designed for the F&B industry and uses a model trained on user reviews from Malaysian restaurants collected from Google Reviews. The model simultaneously predicts sentiment and sarcasm in the reviews. Users must submit their review by accessing the 'Submit Review' page situated on the left panel. This dashboard page is intended for executive use and is password-protected. This platform allows executives to gain valuable insights into user sentiments and sarcasm in the F&B industry, which can help them make informed decisions.")
     
     st.write("The goal of this dashboard is to raise awareness of the importance of data-driven decision-making processes for SMEs and to train them on how to use real-time dashboards.")
+
+    st.write("To access the data and view the dashboard, please enter the password 'admin123'".)
     
     # Add a divider under the title
     st.markdown("<hr/>", unsafe_allow_html=True)
