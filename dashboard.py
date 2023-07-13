@@ -75,7 +75,7 @@ def main():
     
     st.write("The goal of this dashboard is to raise awareness of the importance of data-driven decision-making processes for SMEs and to train them on how to use real-time dashboards.")
 
-    st.write("To access the data and view the dashboard, please enter the password 'admin123'".)
+    st.write("To access the data and view the dashboard, please enter the password 'admin123'.")
     
     # Add a divider under the title
     st.markdown("<hr/>", unsafe_allow_html=True)
