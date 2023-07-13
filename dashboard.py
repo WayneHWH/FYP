@@ -26,9 +26,6 @@ nltk.download('punkt')
 # Set wide mode layout
 st.set_page_config(layout="wide")
 
-# Set theme configuration option to light mode
-st.set_theme('light')
-
 # Read the data from the CSV file
 df = pd.read_csv('user_reviews.csv')
 
