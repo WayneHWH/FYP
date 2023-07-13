@@ -1,6 +1,9 @@
 # Import libraries
 import nltk
 import streamlit as st
+import altair as alt
+import plotly.express as px
+import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import seaborn as sns
@@ -20,6 +23,8 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('punkt')
 
+# Set wide mode layout
+st.set_page_config(layout="wide")
 
 # Read the data from the CSV file
 df = pd.read_csv('user_reviews.csv')
@@ -64,6 +69,14 @@ def main():
     
     # Title of the app
     st.title("Restaurant User Review Sentiment Analysis Dashboard")
+    
+    # Description of the app
+    st.write("This dashboard is designed for the F&B industry and uses a model trained on user reviews from Malaysian restaurants collected from Google Reviews. The model simultaneously predicts sentiment and sarcasm in the reviews. Users must submit their review by accessing the 'Submit Review' page situated on the left panel. This dashboard page is intended for executive use and is password-protected. To access the data and view the dashboard, please enter the password 'admin123'. This platform allows executives to gain valuable insights into user sentiments and sarcasm in the F&B industry, which can help them make informed decisions.")
+    
+    st.write("The goal of this dashboard is to raise awareness of the importance of data-driven decision-making processes for SMEs and to train them on how to use real-time dashboards.")
+    
+    # Add a divider under the title
+    st.markdown("<hr/>", unsafe_allow_html=True)
 
     # Refresh the dashboard every 10 seconds
     st_autorefresh(interval=10 * 1000)
@@ -79,7 +92,7 @@ def main():
 def display_dashboard():
 
     # Filter by sentiment
-    sentiment_filter = st.selectbox("Filter by Sentiment", options=['All', 'Positive', 'Neutral', 'Negative'])
+    sentiment_filter = st.sidebar.selectbox("Filter by Sentiment", options=['All', 'Positive', 'Neutral', 'Negative'])
 
     # Filtered DataFrame based on sentiment selection
     if sentiment_filter == 'All':
@@ -92,9 +105,9 @@ def display_dashboard():
     if sarcasm_filter:
         filtered_df = filtered_df[filtered_df['Sarcasm'] == 'Sarcasm']
 
-    # Display the filtered DataFrame on the left panel
-    st.sidebar.subheader("Filtered Data")
-    st.sidebar.write(filtered_df)
+    # Display the filtered DataFrame on the main panel
+    with st.expander("View User Records", expanded=False):
+        st.write(filtered_df)
 
     # Scorecard
     st.subheader("Scorecard")
@@ -102,32 +115,50 @@ def display_dashboard():
     positive_reviews = len(filtered_df[filtered_df['Sentiment'] == 'Positive'])
     neutral_reviews = len(filtered_df[filtered_df['Sentiment'] == 'Neutral'])
     negative_reviews = len(filtered_df[filtered_df['Sentiment'] == 'Negative'])
+    sarcasm_count = len(filtered_df[filtered_df['Sarcasm'] == 'Sarcasm'])
     average_rating = filtered_df['Rating'].mean()
     
-    # Style the scorecard as a rectangle
+
+    # Style the scorecards with modern design and hover effect
     st.markdown(
         """
         <style>
-        .scorecard {
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            padding: 20px;
+        .scorecards {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            margin-bottom: 20px;
         }
         .scorecard-item {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
             text-align: center;
+            width: 200px;
+            margin-right: 10px;
+            transition: transform 0.2s ease-in-out;
+        }
+        .scorecard-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .scorecard-item h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        .scorecard-item p {
+            font-size: 20px;
+            font-weight: bold;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # Display the scorecard
+    # Display the scorecards
     st.markdown(
         f"""
-        <div class="scorecard">
+        <div class="scorecards">
             <div class="scorecard-item">
                 <h3>Total Reviews</h3>
                 <p>{total_reviews}</p>
@@ -136,77 +167,140 @@ def display_dashboard():
                 <h3>Average Rating</h3>
                 <p>{round(average_rating, 2)}</p>
             </div>
+            <div class="scorecard-item">
+                <h3>Positive Reviews</h3>
+                <p>{positive_reviews}</p>
+            </div>
+            <div class="scorecard-item">
+                <h3>Neutral Reviews</h3>
+                <p>{neutral_reviews}</p>
+            </div>
+            <div class="scorecard-item">
+                <h3>Negative Reviews</h3>
+                <p>{negative_reviews}</p>
+            </div>
+            <div class="scorecard-item">
+                <h3>Sarcasm Count</h3>
+                <p>{sarcasm_count}</p>
+            </div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    # Create a two-column layout
-    col1, col2, col3 = st.columns(3)
 
-    # Pie Chart - Sarcasm Class Distribution
+
+
+    # Create a two-column layout
+    col1, col2 = st.columns(2)
+
+    # Bar Chart - Sentiment Class Distribution
     with col1:
         st.subheader('Sentiment Distribution')
-        sentiment_counts = filtered_df['Sentiment'].value_counts()
-        sentiment_labels = sentiment_counts.index
-        sentiment_values = sentiment_counts.values
-        colors = ['green', 'blue', 'red']  # Define the colors for each bar
-        fig1, ax1 = plt.subplots()
-        ax1.bar(sentiment_labels, sentiment_values, color=colors)
-        ax1.set_xlabel("Sentiment")
-        ax1.set_ylabel("Count")
-        ax1.set_title("")
-        st.pyplot(fig1)
+        sentiment_counts = filtered_df['Sentiment'].value_counts().reset_index()
+        sentiment_counts.columns = ['Sentiment', 'Count']
+        sentiment_chart = alt.Chart(sentiment_counts).mark_bar().encode(
+            x='Sentiment',
+            y='Count',
+            color='Sentiment',
+            tooltip=['Sentiment', 'Count']
+        ).properties(
+            width=600,  # Set the width of the chart
+            height=400  # Set the height of the chart
+        )
+        st.altair_chart(sentiment_chart)
 
-    # Bar Chart - Sentiment Distribution
+    # Donut Chart - Sarcasm Class Distribution
     with col2:
-        st.subheader('Sarcasm Class Distribution')
         sarcasm_counts = filtered_df['Sarcasm'].value_counts()
-        sarcasm_labels = sarcasm_counts.index
-        sarcasm_values = sarcasm_counts.values
-        fig2, ax2 = plt.subplots()
-        ax2.pie(sarcasm_values, labels=sarcasm_labels, autopct='%1.1f%%', startangle=90)
-        ax2.axis('equal')
-        plt.title('')
-        st.pyplot(fig2)
+        sarcasm_data = pd.DataFrame({'Sarcasm': sarcasm_counts.index, 'Count': sarcasm_counts.values})
 
+        fig = px.pie(sarcasm_data, values='Count', names='Sarcasm', hole=0.5,
+                     labels={'Count': 'Count', 'Sarcasm': 'Sarcasm'},
+                     title='Sarcasm Class Distribution')
+
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+
+        fig.update_layout(width=600, height=400)
+
+        st.plotly_chart(fig)
+    
+    # Bar Chart - Rating Distribution
+    st.subheader('Rating Distribution')
+    rating_counts = filtered_df['Rating'].value_counts().reset_index()
+    rating_counts.columns = ['Rating', 'Count']
+
+    # Calculate the mean rating
+    mean_rating = filtered_df['Rating'].mean()
+
+    fig = px.bar(rating_counts, x='Rating', y='Count', color='Rating', 
+                 labels={'Rating': 'Rating', 'Count': 'Count'})
+
+    fig.add_hline(y=mean_rating, line_dash='dash', line_color='red', 
+                  annotation_text=f'Mean Rating: {round(mean_rating, 2)}',
+                  annotation_position='bottom right')
+
+    fig.update_layout(width=1200, height=400)
+    st.plotly_chart(fig)
+    
+
+    # Create a two-column layout
+    col3, col4 = st.columns(2)    
+
+    
     # Calculate the number of reviews per day for each sentiment
     filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
     filtered_df['Day'] = filtered_df['Date'].dt.date
     reviews_per_day = filtered_df.groupby(['Sentiment', 'Day']).size().unstack(level=0).fillna(0)
-    
-    # Line chart - Number of reviews over days by sentiment
+
     with col3:
+        # Line chart - Number of reviews over days by sentiment
         st.subheader('Number of Reviews Over Days by Sentiment')
-        fig, ax = plt.subplots()
-        for sentiment in reviews_per_day.columns:
-            ax.plot(reviews_per_day.index, reviews_per_day[sentiment], marker='o', label=sentiment)
-        ax.legend()
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Number of Reviews')
-        ax.set_title('')
-        ax.grid(True)
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
+
+        fig = px.line(reviews_per_day, x=reviews_per_day.index, y=reviews_per_day.columns,
+                      labels={'x': 'Date', 'y': 'Number of Reviews'}, markers=True)
+
+        fig.update_layout(title='', xaxis_title='Date', yaxis_title='Number of Reviews', legend_title='Sentiment')
+        fig.update_xaxes(tickangle=45, tickformat="%Y-%m-%d")
+
+        st.plotly_chart(fig)
+    
+    with col4:
         
-    # Rating vs Sentiment scatter plot
-    st.subheader('Rating vs Sentiment')
-    fig3, ax3 = plt.subplots()
-    sns.scatterplot(data=filtered_df, x='Rating', y='Sentiment', hue='Sentiment', palette='Set1')
-    ax3.set_xlabel('Rating')
-    ax3.set_ylabel('Sentiment')
-    ax3.set_title('')
-    st.pyplot(fig3)
+        # Violin chart - Rating Distribution by Sentiments
+        st.subheader('Rating Distribution by Sentiments')
+        # Create the violin plot using Plotly Express
+        fig = px.violin(filtered_df, x='Rating', y='Sentiment', box=True, points='all')
+
+        # Customize the plot layout
+        fig.update_layout(
+            xaxis_title="Rating",
+            yaxis_title="Sentiment",
+            width=600,
+            height=500
+        )
+
+        # Display the plot within the Streamlit app
+        st.plotly_chart(fig)
 
     # Word Cloud
     st.subheader('Word Cloud')
     text = ' '.join(filtered_df['Review'])
-    wordcloud = WordCloud(width=800, height=400, background_color="white").generate(text)
-    fig4, ax4 = plt.subplots()
-    ax4.imshow(wordcloud, interpolation='bilinear')
-    ax4.axis('off')
-    ax4.set_title('')
-    st.pyplot(fig4)
+
+    # Get the top 20 words
+
+    # Preprocess text
+    processed_text = preprocess_text(text)
+    word_counts = Counter(processed_text.split())
+    top_words = dict(word_counts.most_common(50))
+
+    wordcloud = WordCloud(width=800, height=400, background_color="white").generate_from_frequencies(top_words)
+
+    fig, ax = plt.subplots()
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    ax.set_title('Top 20 Words')
+    st.pyplot(fig)
     
     # Calculate the top words for each sentiment
     top_words = {'Positive': Counter(), 'Neutral': Counter(), 'Negative': Counter()}
@@ -216,24 +310,33 @@ def display_dashboard():
         processed_text = preprocess_text(review)
         top_words[sentiment].update(processed_text.split())
 
-    # Create bar chart for top positive, neutral, and negative words
-    st.subheader("Top 10 Positive, Neutral, and Negative Words")
-    fig, ax = plt.subplots()
-    x_pos = range(10)
-    bar_width = 0.25
+    # Get the top 10 words for each sentiment
+    top_positive_words = dict(top_words['Positive'].most_common(10))
+    top_neutral_words = dict(top_words['Neutral'].most_common(10))
+    top_negative_words = dict(top_words['Negative'].most_common(10))
 
-    for i, (sentiment, word_counts) in enumerate(top_words.items()):
-        top_10_words = dict(word_counts.most_common(10))
-        ax.bar([x + i * bar_width for x in x_pos], top_10_words.values(), bar_width, label=sentiment)
+    # Create data for the bar chart
+    data = [
+        go.Bar(name='Positive', x=list(top_positive_words.keys()), y=list(top_positive_words.values())),
+        go.Bar(name='Neutral', x=list(top_neutral_words.keys()), y=list(top_neutral_words.values())),
+        go.Bar(name='Negative', x=list(top_negative_words.keys()), y=list(top_negative_words.values()))
+    ]
 
-    ax.set_xticks([x + bar_width for x in x_pos])
-    ax.set_xticklabels(top_10_words.keys(), rotation=45)
-    ax.set_xlabel("Words")
-    ax.set_ylabel("Count")
-    ax.set_title("Top 10 Positive, Neutral, and Negative Words")
-    ax.legend()
-    ax.grid(True)
-    st.pyplot(fig)
+    # Set the layout for the bar chart
+    layout = go.Layout(
+        title='Top 10 Positive, Neutral, and Negative Words',
+        xaxis=dict(title='Words'),
+        yaxis=dict(title='Count'),
+        barmode='group',
+        width=1200,
+        height=500
+    )
+
+    # Create the figure with data and layout
+    fig = go.Figure(data=data, layout=layout)
+
+    # Display the bar chart using Plotly
+    st.plotly_chart(fig)
 
     
 if __name__ == "__main__":
