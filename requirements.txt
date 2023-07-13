@@ -7,3 +7,5 @@ matplotlib
 wordcloud
 gensim
 scikit-learn
+plotly
+altair
