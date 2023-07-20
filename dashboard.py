@@ -1,5 +1,6 @@
 # Import libraries
 import nltk
+from nltk import ngrams
 import streamlit as st
 import altair as alt
 import plotly.express as px
@@ -13,12 +14,16 @@ import gensim
 from gensim import corpora
 from pprint import pprint
 from collections import Counter
+from nltk import bigrams
 from matplotlib import colors as mcolors
 import string
 import joblib
 from datetime import datetime
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet
 
 
+nltk.download('wordnet')
 nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('punkt')
@@ -71,17 +76,22 @@ def main():
     st.title("Restaurant User Review Sentiment Analysis Dashboard")
     
     # Description of the app
-    st.write("This dashboard is designed for the F&B industry and uses a model trained on user reviews from Malaysian restaurants collected from Google Reviews. The model simultaneously predicts sentiment and sarcasm in the reviews. Users must submit their review by accessing the 'Submit Review' page situated on the left panel. This dashboard page is intended for executive use and is password-protected. This platform allows executives to gain valuable insights into user sentiments and sarcasm in the F&B industry, which can help them make informed decisions.")
+    st.write("This dashboard is designed for the F&B industry and uses a model trained on user reviews from Malaysian restaurants collected from Google Reviews. The model simultaneously predicts sentiment and sarcasm in the reviews. This platform allows executives to gain valuable insights into user sentiments in the F&B industry, which can help them make informed decisions.")
     
     st.write("The goal of this dashboard is to raise awareness of the importance of data-driven decision-making processes for SMEs and to train them on how to use real-time dashboards.")
-
-    st.write("To access the data and view the dashboard, please enter the password 'admin123'.")
+    
+    st.write("1. Users must submit their review by accessing the 'Submit Review' page situated on the left panel.")
+    
+    st.write("2. This dashboard page is intended for executive use and is password-protected.")
+    
+    st.write("3. To access the data and view the dashboard, please enter the password 'admin123'")
+    
     
     # Add a divider under the title
     st.markdown("<hr/>", unsafe_allow_html=True)
 
-    # Refresh the dashboard every 10 seconds
-    st_autorefresh(interval=10 * 1000)
+    # Refresh the dashboard every 120 seconds
+    st_autorefresh(interval=120 * 1000)
     
     # Passcode input
     passcode = st.text_input("Please enter the passcode:", type="password")
@@ -269,76 +279,238 @@ def display_dashboard():
     
     with col4:
         
-        # Violin chart - Rating Distribution by Sentiments
-        st.subheader('Rating Distribution by Sentiments')
+        # Violin chart - Rating Distribution by Sentiments or Sarcasm
+        st.subheader('Rating Distribution')
+        chart_type = st.selectbox("Select Chart Type", options=["Sentiment", "Sarcasm"])
+
+        if chart_type == "Sentiment":
+            chart_data = filtered_df
+            y_label = "Sentiment"
+        elif chart_type == "Sarcasm":
+            chart_data = filtered_df
+            y_label = "Sarcasm"
+
         # Create the violin plot using Plotly Express
-        fig = px.violin(filtered_df, x='Rating', y='Sentiment', box=True, points='all')
+        fig = px.violin(chart_data, x='Rating', y=y_label, box=True, points='all')
 
         # Customize the plot layout
         fig.update_layout(
             xaxis_title="Rating",
-            yaxis_title="Sentiment",
+            yaxis_title=y_label,
             width=600,
             height=500
         )
 
         # Display the plot within the Streamlit app
         st.plotly_chart(fig)
-
-    # Word Cloud
-    st.subheader('Word Cloud')
-    text = ' '.join(filtered_df['Review'])
-
-    # Get the top 20 words
-
-    # Preprocess text
-    processed_text = preprocess_text(text)
-    word_counts = Counter(processed_text.split())
-    top_words = dict(word_counts.most_common(50))
-
-    wordcloud = WordCloud(width=800, height=400, background_color="white").generate_from_frequencies(top_words)
-
-    fig, ax = plt.subplots()
-    ax.imshow(wordcloud, interpolation='bilinear')
-    ax.axis('off')
-    ax.set_title('Top 20 Words')
-    st.pyplot(fig)
+        
+        
+        
+        
     
-    # Calculate the top words for each sentiment
-    top_words = {'Positive': Counter(), 'Neutral': Counter(), 'Negative': Counter()}
+    ############ TOP 10 POSITIVE, NEUTRAL AND NEGATIVE WORD COUNT BAR CHART ############  
+    
+    # Calculate the top words and bigrams for each sentiment and sarcasm label
+    top_words = {
+        'Positive': Counter(),
+        'Neutral': Counter(),
+        'Negative': Counter(),
+        'Sarcasm': Counter()
+    }
+    top_bigrams = {
+        'Positive': Counter(),
+        'Neutral': Counter(),
+        'Negative': Counter(),
+        'Sarcasm': Counter()
+    }
 
-    for review in df['Review']:
+    for review, sarcasm in zip(df['Review'], df['Sarcasm']):
         sentiment = df.loc[df['Review'] == review, 'Sentiment'].iloc[0]
         processed_text = preprocess_text(review)
-        top_words[sentiment].update(processed_text.split())
+        tokens = processed_text.split()
+        top_words[sentiment].update(tokens)
+        if sarcasm == 'Sarcasm':
+            top_words['Sarcasm'].update(tokens)
+        bigrams = list(ngrams(tokens, 2))  # Generate bigrams
+        top_bigrams[sentiment].update(bigrams)
+        if sarcasm == 'Sarcasm':
+            top_bigrams['Sarcasm'].update(bigrams)
 
-    # Get the top 10 words for each sentiment
-    top_positive_words = dict(top_words['Positive'].most_common(10))
-    top_neutral_words = dict(top_words['Neutral'].most_common(10))
-    top_negative_words = dict(top_words['Negative'].most_common(10))
+    # Get the selected option from the select box
+    selected_option = st.selectbox("Select Chart", options=['Sentiment', 'Sarcasm'])
 
-    # Create data for the bar chart
-    data = [
-        go.Bar(name='Positive', x=list(top_positive_words.keys()), y=list(top_positive_words.values())),
-        go.Bar(name='Neutral', x=list(top_neutral_words.keys()), y=list(top_neutral_words.values())),
-        go.Bar(name='Negative', x=list(top_negative_words.keys()), y=list(top_negative_words.values()))
-    ]
+    # Determine the top words/bigrams and title based on the selected option
+    if selected_option == 'Sentiment':
+        top_words_dict = {
+            'Positive': dict(top_words['Positive'].most_common(10)),
+            'Neutral': dict(top_words['Neutral'].most_common(10)),
+            'Negative': dict(top_words['Negative'].most_common(10))
+        }
+        top_bigrams_dict = {
+            'Positive': dict(top_bigrams['Positive'].most_common(10)),
+            'Neutral': dict(top_bigrams['Neutral'].most_common(10)),
+            'Negative': dict(top_bigrams['Negative'].most_common(10))
+        }
+        title = 'Top Words and Bigrams for Sentiments'
+    else:  # selected_option == 'Sarcasm'
+        top_words_dict = {
+            'Sarcasm': dict(top_words['Sarcasm'].most_common(10))
+        }
+        top_bigrams_dict = {
+            'Sarcasm': dict(top_bigrams['Sarcasm'].most_common(10))
+        }
+        title = 'Top Words and Bigrams for Sarcasm'
 
-    # Set the layout for the bar chart
-    layout = go.Layout(
-        title='Top 10 Positive, Neutral, and Negative Words',
-        xaxis=dict(title='Words'),
-        yaxis=dict(title='Count'),
-        barmode='group',
-        width=1200,
-        height=500
-    )
+    # Check if the checkbox for bigrams is selected
+    show_bigrams = st.checkbox("Show Bigrams")
 
-    # Create the figure with data and layout
-    fig = go.Figure(data=data, layout=layout)
+    # Display separate charts for bigrams and words if the checkbox is selected
+    if show_bigrams:
+        # Create data for the bigram chart
+        bigram_data = [
+            go.Bar(name=key + ' - Bigrams', x=list(value.keys()), y=list(value.values()))
+            for key, value in top_bigrams_dict.items()
+        ]
+        # Set the layout for the bigram chart
+        bigram_layout = go.Layout(
+            xaxis=dict(title='Bigrams'),
+            yaxis=dict(title='Count'),
+            width=1200,
+            height=500
+        )
+        # Create the bigram chart
+        bigram_fig = go.Figure(data=bigram_data, layout=bigram_layout)
+        # Display the bigram chart using Plotly
+        st.subheader(title + " - Bigrams")
+        st.plotly_chart(bigram_fig)
+    else:
+        # Create data for the unigram chart
+        unigram_data = [
+            go.Bar(name=key + ' - Words', x=list(value.keys()), y=list(value.values()))
+            for key, value in top_words_dict.items()
+        ]
+        # Set the layout for the unigram chart
+        unigram_layout = go.Layout(
+            xaxis=dict(title='Words'),
+            yaxis=dict(title='Count'),
+            width=1200,
+            height=500
+        )
+        # Create the unigram chart
+        unigram_fig = go.Figure(data=unigram_data, layout=unigram_layout)
+        # Display the unigram chart using Plotly
+        st.subheader(title + " - Words")
+        st.plotly_chart(unigram_fig)
 
-    # Display the bar chart using Plotly
-    st.plotly_chart(fig)
+
+    
+    
+    
+    ############ TOP 20 BIGRAM BAR CHART ############   
+    
+
+
+#     # Create a list to store the bigrams
+#     all_bigrams = []
+
+#     # Iterate over the preprocessed text in each row
+#     for text in df['processed_text']:
+#         # Tokenize the text into individual words
+#         tokens = nltk.word_tokenize(text)
+
+#         # Create the bigrams
+#         bg = list(bigrams(tokens))
+
+#         # Append the bigrams to the list
+#         all_bigrams.extend(bg)
+
+#     # Count the occurrences of each bigram
+#     bigram_counts = nltk.FreqDist(all_bigrams)
+
+#     # Convert the bigram counts to a DataFrame
+#     bigram_df = pd.DataFrame(list(bigram_counts.items()), columns=['Bigram', 'Count'])
+
+#     # Sort the bigram counts in descending order
+#     sorted_bigrams = bigram_df.sort_values('Count', ascending=False)
+
+#     # Select the top 20 bigrams
+#     top_20_bigrams = sorted_bigrams.head(20)
+
+#     # Create the chart using Altair (vertical bar chart)
+#     st.subheader('Top 20 Bigram Frequency')
+#     chart = alt.Chart(top_20_bigrams).mark_bar().encode(
+#         x='Count',
+#         y=alt.Y('Bigram', sort=alt.EncodingSortField(field='Count', order='descending')),
+#         tooltip=['Bigram', 'Count']
+#     ).properties(
+#         width=1200,
+#         height=600
+#     )
+
+#     # Display the chart
+#     st.altair_chart(chart)
+
+
+    
+    
+    
+    
+
+    ############ TOPIC MODELLING WORD CLOUD CHART ############  
+    
+        # Preprocess the text data
+    df['processed_text'] = df['Review'].apply(preprocess_text)
+
+    lemmatizer = WordNetLemmatizer()
+
+    # Lemmatize the filtered_reviews column
+    df['lemmatized_text'] = df['processed_text'].apply(lambda x: ' '.join([lemmatizer.lemmatize(word, wordnet.VERB) for word in x.split()]))
+
+    # Preprocess the text data
+    documents = df['lemmatized_text'].apply(lambda x: x.lower().split())
+
+    # Create a dictionary representation of the documents
+    dictionary = corpora.Dictionary(documents)
+
+    # Convert the documents into a bag-of-words (BoW) representation
+    corpus = [dictionary.doc2bow(doc) for doc in documents]
+
+    # Build the LDA model
+    lda_model = gensim.models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=5, passes=10)
+
+      
+    # Get the top words for each topic
+    topic_words = {i: dict(lda_model.show_topic(i, topn=10)) for i in range(lda_model.num_topics)}
+
+        # Define colors for wordclouds
+    cols = [color for name, color in mcolors.TABLEAU_COLORS.items()]
+
+    # Create a wordcloud for each topic
+    fig, axes = plt.subplots(2, 2, figsize=(10, 10), sharex=True, sharey=True)
+
+    for i, ax in enumerate(axes.flatten()):
+        topic_wordcloud = WordCloud(stopwords=stop_words,
+                                    background_color='white',
+                                    width=2500,
+                                    height=1800,
+                                    max_words=10,
+                                    colormap='tab10',
+                                    color_func=lambda *args, **kwargs: cols[i],
+                                    prefer_horizontal=1.0)
+        topic_wordcloud.generate_from_frequencies(topic_words[i], max_font_size=300)
+        ax.imshow(topic_wordcloud)
+        ax.set_title('Topic ' + str(i), fontdict=dict(size=16))
+        ax.axis('off')
+
+    # Adjust subplot spacing and display the wordclouds
+    plt.subplots_adjust(wspace=0, hspace=0)
+    plt.axis('off')
+    plt.margins(x=0, y=0)
+    plt.tight_layout()
+    st.subheader("Topic Modelling")
+    st.pyplot(fig)
+
+
 
     
 if __name__ == "__main__":
