@@ -34,6 +34,9 @@ st.set_page_config(layout="wide")
 # Read the data from the CSV file
 df = pd.read_csv('user_reviews.csv')
 
+# Change date strings in the format 'YYYY-MM-DD'
+df['Date'] = pd.to_datetime(df['Date']).dt.date
+
 #get the stopword and punctuation list from nltk library
 stop_words = nltk.corpus.stopwords.words("english") + list(string.punctuation)
 
@@ -106,16 +109,26 @@ def display_dashboard():
     # Filter by sentiment
     sentiment_filter = st.sidebar.selectbox("Filter by Sentiment", options=['All', 'Positive', 'Neutral', 'Negative'])
 
-    # Filtered DataFrame based on sentiment selection
-    if sentiment_filter == 'All':
-        filtered_df = df
-    else:
-        filtered_df = df[df['Sentiment'] == sentiment_filter]
-
     # Filter by sarcasm
     sarcasm_filter = st.sidebar.checkbox("Show Sarcasm")
+
+    # Date filter
+    # Default start date: 1st of July
+    default_start_date = datetime(datetime.now().year, 7, 1).date()
+    st.sidebar.subheader("Date Filter")
+    start_date = st.sidebar.date_input("Start Date", default_start_date)
+    end_date = st.sidebar.date_input("End Date")
+
+    # Apply all the filters to the DataFrame
+    filtered_df = df.copy()
+    if sentiment_filter != 'All':
+        filtered_df = filtered_df[filtered_df['Sentiment'] == sentiment_filter]
+
     if sarcasm_filter:
         filtered_df = filtered_df[filtered_df['Sarcasm'] == 'Sarcasm']
+
+    if start_date and end_date:
+        filtered_df = filtered_df[(filtered_df['Date'] >= start_date) & (filtered_df['Date'] <= end_date)]
       
 
     # Display the filtered DataFrame on the main panel
