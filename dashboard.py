@@ -117,6 +117,16 @@ def display_dashboard():
     if sarcasm_filter:
         filtered_df = filtered_df[filtered_df['Sarcasm'] == 'Sarcasm']
 
+    # Date filter
+    st.sidebar.subheader("Date Filter")
+    start_date = st.sidebar.date_input("Start Date")
+    end_date = st.sidebar.date_input("End Date")
+
+    if start_date and end_date:
+        filtered_df = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
+    else:
+        filtered_df = df
+
     # Display the filtered DataFrame on the main panel
     with st.expander("View User Records", expanded=False):
         st.write(filtered_df)
